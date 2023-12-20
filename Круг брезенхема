@@ -1,0 +1,53 @@
+from PIL import Image, ImageOps
+import matplotlib.pyplot as plt
+
+def calculate_next_x_coordinate(x, y, F, is_y_greater_than_x, radius):
+    if is_y_greater_than_x:
+        return x + 1, F + 4 * x + 4 * y + 6
+    else:
+        return x + 1, F + 4 * x + 6
+
+def plot_circle_points(image, x, y, radius):
+    image.putpixel((x + radius, y + radius), (255, 255, 255))
+    image.putpixel((x + radius, -y + radius), (255, 255, 255))
+    image.putpixel((-x + radius, y + radius), (255, 255, 255))
+    image.putpixel((-x + radius, -y + radius), (255, 255, 255))
+    image.putpixel((y + radius, x + radius), (255, 255, 255))
+    image.putpixel((-y + radius, x + radius), (255, 255, 255))
+    image.putpixel((y + radius, -x + radius), (255, 255, 255))
+    image.putpixel((-y + radius, -x + radius), (255, 255, 255))
+
+def create_checkerboard(image_width, image_height):
+    image = Image.new('RGB', (image_width, image_height))
+
+    for x in range(0, image_width):
+        for y in range(0, image_height):
+            if (x % 2 == y % 2):
+                image.putpixel((x, y), (54, 54, 54))
+    
+    return image
+
+def draw_circle(radius, image):
+    x, y = -radius, 0
+    F = 1 - 2 * radius
+
+    while x < 0:
+        plot_circle_points(image, x, y, radius)
+        
+        is_y_greater_than_x = abs(x) <= abs(y)
+        if abs(x) <= abs(y):
+            x, F = calculate_next_x_coordinate(x, y, F, is_y_greater_than_x, radius)
+        else:
+            x, F = calculate_next_x_coordinate(x, y, F, is_y_greater_than_x, radius)
+            y += 1
+
+circle_radius = int(input())
+
+image = create_checkerboard(2 * circle_radius + 1, 2 * circle_radius + 1)
+
+draw_circle(circle_radius, image)
+
+image = ImageOps.flip(image)
+plt.imshow(image)
+plt.show()
+image.save("start.png")
