@@ -2,7 +2,7 @@ from PIL import Image, ImageOps, ImageDraw
 import matplotlib.pyplot as plt
 
 
-def BrezenhemCircle(center_x, center_y, radius):
+def brezenhem_circle(center_x, center_y, radius):
     # Создаем поле для отображения окружности без необходимости подбирать размеры для отображения всей окружности
     size = (max(center_x, center_y, radius) * 2)
     image = Image.new("RGB", (size * 2 + 1, size * 2 + 1))
@@ -45,11 +45,11 @@ def BrezenhemCircle(center_x, center_y, radius):
     plt.axis('off')  # Отключаем отображение стандартных осей
     plt.show()
 
-def Main():
+def main():
     center_x = int(input('center x = '))  # Координата x центра окружности
     center_y = int(input('center y = '))  # Координата x центра окружности
     radius = int(input('radius = '))  # Координата x центра окружности
 
-    circle_image = BrezenhemCircle(center_x, center_y, radius)
+    brezenhem_circle(center_x, center_y, radius)
 
-Main()
+main()
