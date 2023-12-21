@@ -1,53 +1,55 @@
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw
 import matplotlib.pyplot as plt
 
-def calculate_next_x_coordinate(x, y, F, is_y_greater_than_x, radius):
-    if is_y_greater_than_x:
-        return x + 1, F + 4 * x + 4 * y + 6
-    else:
-        return x + 1, F + 4 * x + 6
 
-def plot_circle_points(image, x, y, radius):
-    image.putpixel((x + radius, y + radius), (255, 255, 255))
-    image.putpixel((x + radius, -y + radius), (255, 255, 255))
-    image.putpixel((-x + radius, y + radius), (255, 255, 255))
-    image.putpixel((-x + radius, -y + radius), (255, 255, 255))
-    image.putpixel((y + radius, x + radius), (255, 255, 255))
-    image.putpixel((-y + radius, x + radius), (255, 255, 255))
-    image.putpixel((y + radius, -x + radius), (255, 255, 255))
-    image.putpixel((-y + radius, -x + radius), (255, 255, 255))
+def BrezenhemCircle(center_x, center_y, radius):
+    # Создаем поле для отображения окружности без необходимости подбирать размеры для отображения всей окружности
+    size = (max(center_x, center_y, radius) * 2)
+    image = Image.new("RGB", (size * 2 + 1, size * 2 + 1))
+    draw = ImageDraw.Draw(image)
 
-def create_checkerboard(image_width, image_height):
-    image = Image.new('RGB', (image_width, image_height))
+    temp_x = radius
+    temp_y = 0
+    d = 1 - radius
+    points = []
 
-    for x in range(0, image_width):
-        for y in range(0, image_height):
-            if (x % 2 == y % 2):
-                image.putpixel((x, y), (54, 54, 54))
-    
-    return image
+    while temp_x >= temp_y:
+        # Добавляем симметричные точки для окружности, вокруг некоторой точки
+        points.extend([(temp_x, temp_y), (-temp_x, temp_y), (temp_x, -temp_y), (-temp_x, -temp_y),
+                            (temp_y, temp_x), (-temp_y, temp_x), (temp_y, -temp_x), (-temp_y, -temp_x)])
 
-def draw_circle(radius, image):
-    x, y = -radius, 0
-    F = 1 - 2 * radius
-
-    while x < 0:
-        plot_circle_points(image, x, y, radius)
-        
-        is_y_greater_than_x = abs(x) <= abs(y)
-        if abs(x) <= abs(y):
-            x, F = calculate_next_x_coordinate(x, y, F, is_y_greater_than_x, radius)
+        temp_y += 1
+        if d < 0:
+            d += 2 * temp_y + 1
         else:
-            x, F = calculate_next_x_coordinate(x, y, F, is_y_greater_than_x, radius)
-            y += 1
+            temp_x -= 1
+            d += 2 * (temp_y - temp_x) + 1
 
-circle_radius = int(input())
+    # Смещаем точки в соответствии с заданными координатами центра
+    points = [(size - x - center_x, size - y - center_y) for x, y in points]
 
-image = create_checkerboard(2 * circle_radius + 1, 2 * circle_radius + 1)
+    # Чертим оси координат серым цветом
+    for x in range(2 * size + 1):
+        draw.point((x, size), (100, 100, 100))
+        draw.point((size, x), (100, 100, 100))
 
-draw_circle(circle_radius, image)
+    # Чертим окружность по заранее подготовленным точкам
+    for point in points:
+        draw.point(point, (255, 255, 255))
 
-image = ImageOps.flip(image)
-plt.imshow(image)
-plt.show()
-image.save("start.png")
+    # Отражаем изображение по горизонтали, чтобы оно не было перевернутым
+    image = ImageOps.mirror(image)
+
+    plt.figure('Brezenhem circle')  # Задаём название окну
+    plt.imshow(image)
+    plt.axis('off')  # Отключаем отображение стандартных осей
+    plt.show()
+
+def Main():
+    center_x = int(input('center x = '))  # Координата x центра окружности
+    center_y = int(input('center y = '))  # Координата x центра окружности
+    radius = int(input('radius = '))  # Координата x центра окружности
+
+    circle_image = BrezenhemCircle(center_x, center_y, radius)
+
+Main()
