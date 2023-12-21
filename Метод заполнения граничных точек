@@ -1,0 +1,95 @@
+from PIL import Image, ImageOps
+import matplotlib.pyplot as plt
+
+class DrawingProgram:
+    def __init__(self):
+        self.polygon_points = []
+        self.segment_points = []
+        self.image = Image.new('RGB', (50, 50))
+
+    def draw_segment(self, x0: int, y0: int, x1: int, y1: int, color: tuple = (255, 255, 255)):
+        delta_x = abs(x1 - x0)
+        delta_y = abs(y1 - y0)
+        error = 0
+        diff = 1
+
+        if x0 > x1:
+            x0, x1 = x1, x0
+            y0, y1 = y1, y0
+
+        if y0 > y1:
+            diff = -1
+
+        if delta_x >= delta_y:
+            y = y0
+            for x in range(x0, x1 + 1):
+                self.image.putpixel((x, y), color)
+                error += 2 * delta_y
+                if error >= delta_x:
+                    y += diff
+                    error -= 2 * delta_x
+        else:
+            if diff == -1:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            x = x0
+            for y in range(y0, y1 + 1):
+                self.image.putpixel((x, y), color)
+                error += 2 * delta_x
+                if error >= delta_y:
+                    x += diff
+                    error -= 2 * delta_y
+
+    def handle_mouse_click(self, event):
+        if event.button == 1:
+            self.polygon_points.append((int(event.xdata), int(event.ydata)))
+        elif event.button == 3:
+            if len(self.segment_points) == 0:
+                self.segment_points.append((int(event.xdata), int(event.ydata)))
+            else:
+                self.segment_points.append((int(event.xdata), int(event.ydata)))
+                plt.disconnect(self.cid)
+
+    def fill_polygon(self, filler_color: tuple):
+        y_min = min(self.polygon_points, key=lambda point: point[1])[1]
+        y_max = max(self.polygon_points, key=lambda point: point[1])[1]
+
+        for y in range(y_min, y_max + 1):
+            intersection_points = []
+            for i in range(len(self.polygon_points)):
+                x1, y1 = self.polygon_points[i]
+                x2, y2 = self.polygon_points[(i + 1) % len(self.polygon_points)]
+                if (y1 <= y <= y2) or (y2 <= y <= y1):
+                    x = round(x1 + ((y - y1) / (y2 - y1)) * (x2 - x1))
+                    intersection_points.append(x)
+            intersection_points.sort()
+            for i in range(0, len(intersection_points), 2):
+                for x in range(intersection_points[i], intersection_points[i + 1]):
+                    self.image.putpixel((x, y), filler_color)
+
+    def draw_image(self):
+        self.image = ImageOps.flip(self.image)
+        self.cid = plt.connect("button_press_event", self.handle_mouse_click)
+        for x in range(0, self.image.width):
+            for y in range(0, self.image.height):
+                if (x + y) % 2 == 1:
+                    self.image.putpixel((x, y), (54, 54, 54))
+        plt.imshow(self.image)
+        plt.show()
+
+    def draw_polygon_and_segment(self):
+        self.draw_segment(self.segment_points[0][0], self.segment_points[0][1], self.segment_points[1][0], self.segment_points[1][1], (255, 0, 0))
+        for i in range(-1, len(self.polygon_points) - 1):
+            self.draw_segment(self.polygon_points[i][0], self.polygon_points[i][1], self.polygon_points[i + 1][0], self.polygon_points[i + 1][1], (0, 255, 0))
+
+    def main(self):
+        self.draw_image()
+        self.draw_polygon_and_segment()
+        filler_color = tuple(int(val) for val in input("Enter fill color in format <R G B>: ").strip().split())
+        self.fill_polygon(filler_color)
+        plt.imshow(self.image)
+        plt.show()
+
+if __name__ == "__main__":
+    program = DrawingProgram()
+    program.main()
