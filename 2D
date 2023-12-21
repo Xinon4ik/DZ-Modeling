@@ -1,0 +1,88 @@
+import PIL.Image as Image
+import matplotlib.pyplot as plt
+from math import sin, cos, pi
+class Point:
+    def __init__(self, x_coord: float, y_coord: float):
+        self.x = x_coord
+        self.y = y_coord
+
+def transform_point(transform_matrix: list, vector: list):
+    new_vector = [0] * len(vector)
+    for i in range(len(transform_matrix)):
+        for j in range(len(vector)):
+            new_vector[i] += transform_matrix[i][j] * vector[j]
+    return Point(new_vector[0], new_vector[1])
+
+def get_vector_coordinates(point: Point):
+    return [point.x, point.y, 1]
+
+def to_radians(angle: float):
+    return (angle * pi) / 180
+
+def get_translation_matrix(dx: float = 0, dy: float = 0, dz: float = 0):
+    return [[1, 0, dx],
+            [0, 1, dy],
+            [0, 0, 1]]
+
+def get_scaling_matrix(kx: float = 0, ky: float = 0, kz: float = 0):
+    return [[kx, 0, 0],
+            [0, ky, 0],
+            [0, 0, 1]]
+
+def get_rotation_matrix(angle: float, is_radian: bool = False):
+    if not is_radian:
+        angle = to_radians(angle)
+    return  [[cos(angle), -sin(angle), 0],
+             [sin(angle), cos(angle), 0],
+             [0, 0, 1]]
+
+def draw_line(image, x0: int, y0: int, x1: int, y1: int, color: tuple = (255, 255, 255)):
+    delta_x = abs(x1 - x0)
+    delta_y = abs(y1 - y0)
+    error = 0
+    diff = 1
+    if x0 - x1 > 0:
+        x0, x1 = x1, x0
+        y0, y1 = y1, y0
+    if y0 - y1 > 0:
+        diff = -1
+    if delta_x >= delta_y:
+        y_i = y0
+        for x in range(x0, x1 + 1):
+            image.putpixel((x, y_i), color)
+            error = error + 2 * delta_y
+            if error >= delta_x:
+                y_i += diff
+                error -= 2 * delta_x
+    elif delta_x < delta_y:
+        if diff == -1:
+            x0, x1 = x1, x0
+            y0, y1 = y1, y0
+        x_i = x0
+        for y in range(y0, y1 + 1):
+            image.putpixel((x_i, y), color)
+            error = error + 2 * delta_x
+            if error >= delta_y:
+                x_i += diff
+                error -= 2 * delta_y
+
+points = []
+figures = []
+points.append(Point(0, 0))
+points.append(Point(10, 0))
+points.append(Point(10, 10))
+points.append(Point(0, 10))
+figures.append([1, 2, 3, 4]) 
+
+with Image.new("RGB", (100, 100)) as image:
+    for i in range(len(points)):
+        points[i] = transform_point(get_scaling_matrix(2, 2), get_vector_coordinates(points[i]))
+        points[i] = transform_point(get_rotation_matrix(45), get_vector_coordinates(points[i]))
+        points[i] = transform_point(get_translation_matrix(50, 50), get_vector_coordinates(points[i]))
+    for i in range(len(figures)):
+        fig = figures[i]
+        for j in range(-1, len(fig) - 1):
+            draw_line(image, round(points[fig[j]-1].x), round(points[fig[j]-1].y), 
+                      round(points[fig[j+1]-1].x), round(points[fig[j+1]-1].y))
+    plt.imshow(image)
+    plt.show()
