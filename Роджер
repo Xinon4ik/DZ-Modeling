@@ -1,0 +1,29 @@
+def is_left(p0, p1, p2):
+    return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]) > 0
+ 
+def is_visible(p0, p1, p2):
+    return is_left(p0, p1, p2) and is_left(p1, p2, p0) and is_left(p2, p0, p1)
+ 
+def clip_visible_polygons(polygons):
+    visible_polygons = []
+ 
+    for polygon in polygons:
+        visible_polygon = []
+        n = len(polygon)
+ 
+        for i in range(n):
+            p0 = polygon[i]
+            p1 = polygon[(i + 1) % n]
+            p2 = polygon[(i + 2) % n]
+ 
+            if is_visible(p0, p1, p2):
+                visible_polygon.append(p1)
+ 
+        visible_polygons.append(visible_polygon)
+ 
+    return visible_polygons
+ 
+# Пример использования
+polygons = [[(0, 0), (0, 1), (1, 1), (1, 0)]]
+visible_polygons = clip_visible_polygons(polygons)
+print(visible_polygons)
